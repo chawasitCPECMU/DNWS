@@ -242,9 +242,7 @@ namespace DNWS
         protected Socket serverSocket;
         protected Socket clientSocket;
         private static DotNetWebServer _instance = null;
-
         private static string mode = Program.Configuration["Mode"];
-
         private static int maxThreads = Convert.ToInt32(Program.Configuration["MaxThreads"]);
         protected int id;
 
@@ -271,57 +269,6 @@ namespace DNWS
             return _instance;
         }
 
-        /// <summary>
-        /// Server starting point
-        /// </summary>
-        public void Start()
-        {
-            while (true)
-            {
-                try
-                {
-                    // Create listening socket, queue size is 5 now.
-                    IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Any, _port);
-                    serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    serverSocket.Bind(localEndPoint);
-                    serverSocket.Listen(5);
-                    _parent.Log("Server started at port " + _port + ".");
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    _parent.Log("Server started unsuccessfully.");
-                    _parent.Log(ex.Message);
-                }
-                _port = _port + 1;
-            }
-            try
-            {
-                switch (mode)
-                {
-                    case "Thread":
-                        _parent.Log("Thread Mode");
-                        startThreadHandler();
-                        break;
-                    case "ThreadPool":
-                        _parent.Log("ThreadPool Mode");
-
-                        setMaximumThreads();
-
-                        startThreadPoolHandler();
-                        break;
-                    default:
-                        _parent.Log("Single Process Mode");
-                        startSingleProcessorHandler();
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                _parent.Log("Server starting error: " + ex.Message + "\n" + ex.StackTrace);
-            }
-        }
-
         private void setMaximumThreads()
         {
             int workerThreads;
@@ -337,6 +284,15 @@ namespace DNWS
             }
 
             _parent.Log("Max Threads = " + maxThreads);
+        }
+
+        private HTTPProcessor acceptConnection()
+        {
+            clientSocket = serverSocket.Accept();
+
+            _parent.Log("Client accepted:" + clientSocket.RemoteEndPoint.ToString());
+
+            return new HTTPProcessor(clientSocket, _parent);
         }
 
         private void startSingleProcessorHandler()
@@ -358,25 +314,7 @@ namespace DNWS
             }
         }
 
-        private void startThreadPoolHandler()
-        {
-            while (true)
-            {
-                HTTPProcessor hp = acceptConnection();
-                ThreadPool.QueueUserWorkItem(CallbackHTTPProcess, hp);
-            }
-        }
-
-        private HTTPProcessor acceptConnection()
-        {
-            clientSocket = serverSocket.Accept();
-
-            _parent.Log("Client accepted:" + clientSocket.RemoteEndPoint.ToString());
-
-            return new HTTPProcessor(clientSocket, _parent);
-        }
-
-        static void CallbackHTTPProcess(Object stateInfo)
+        static void callbackHTTPProcess(Object stateInfo)
         {
             try
             {
@@ -385,7 +323,70 @@ namespace DNWS
             }
             catch (IOException ex)
             {
-                _instance._parent.Log("Socket Closed by Host before respond: " + ex.Message);
+                _instance._parent.Log("Socket Closed by Host before response \n" + ex.Message);
+            }
+        }
+
+        private void startThreadPoolHandler()
+        {
+            while (true)
+            {
+                HTTPProcessor hp = acceptConnection();
+                ThreadPool.QueueUserWorkItem(callbackHTTPProcess, hp);
+            }
+        }
+
+        /// <summary>
+        /// Server starting point
+        /// </summary>
+        public void Start()
+        {
+            while (true)
+            {
+                try
+                {
+                    // Create listening socket, queue size is 5 now.
+                    IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Any, _port);
+                    serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    serverSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+                    serverSocket.Bind(localEndPoint);
+                    serverSocket.Listen(5);
+                    _parent.Log("Server started at port " + _port + ".");
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _parent.Log("Server started unsuccessfully.");
+                    _parent.Log(ex.Message);
+                }
+                _port = _port + 1;
+            }
+            try
+            {
+                switch (mode)
+                {
+                    case "Thread":
+                        _parent.Log("Thread Mode");
+
+                        startThreadHandler();
+                        break;
+                    case "ThreadPool":
+                        _parent.Log("ThreadPool Mode");
+
+                        setMaximumThreads();
+
+                        startThreadPoolHandler();
+                        break;
+                    default:
+                        _parent.Log("Single Process Mode");
+
+                        startSingleProcessorHandler();
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                _parent.Log("Server starting error: " + ex.Message + "\n" + ex.StackTrace);
             }
         }
     }
