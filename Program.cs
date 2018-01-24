@@ -239,6 +239,7 @@ namespace DNWS
             _port = port;
             _parent = parent;
             id = 0;
+            ThreadPool.SetMaxThreads(8, 8);
         }
 
         /// <summary>
@@ -293,10 +294,13 @@ namespace DNWS
                     // End single thread
 
                     // Thread
-                    Thread t = new Thread(new ThreadStart(hp.Process));
-                    t.Start();
+                    // Thread t = new Thread(new ThreadStart(hp.Process));
+                    // t.Start();
                     // End Thread
 
+                    // Thread Pool
+                    ThreadPool.QueueUserWorkItem(CallbackHTTPProcess, hp);
+                    // End Thread Pool
                 }
                 catch (Exception ex)
                 {
@@ -305,6 +309,12 @@ namespace DNWS
                 }
             }
 
+        }
+
+        static void CallbackHTTPProcess(Object stateInfo) 
+        {
+            HTTPProcessor hp = (HTTPProcessor) stateInfo;
+            hp.Process();
         }
     }
 }
