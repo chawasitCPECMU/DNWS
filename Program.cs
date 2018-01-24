@@ -232,6 +232,10 @@ namespace DNWS
         protected Socket serverSocket;
         protected Socket clientSocket;
         private static DotNetWebServer _instance = null;
+
+        private static string mode = Program.Configuration["Mode"];
+
+        private static int maxThreads = Convert.ToInt32(Program.Configuration["MaxThreads"]);
         protected int id;
 
         private DotNetWebServer(int port, Program parent)
@@ -239,7 +243,6 @@ namespace DNWS
             _port = port;
             _parent = parent;
             id = 0;
-            ThreadPool.SetMaxThreads(8, 8);
         }
 
         /// <summary>
@@ -250,10 +253,10 @@ namespace DNWS
         /// <returns></returns>
         public static DotNetWebServer GetInstance(int port, Program parent)
         {
-            if (_instance == null)
-            {
+            if (_instance == null) {
                 _instance = new DotNetWebServer(port, parent);
             }
+
             return _instance;
         }
 
@@ -263,8 +266,7 @@ namespace DNWS
         public void Start()
         {
             while (true) {
-                try
-                {
+                try {
                     // Create listening socket, queue size is 5 now.
                     IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Any, _port);
                     serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -273,42 +275,80 @@ namespace DNWS
                     _parent.Log("Server started at port " + _port + ".");
                     break;
                 }
-                catch (Exception ex)
-                {
+                catch (Exception ex) {
                     _parent.Log("Server started unsuccessfully.");
                     _parent.Log(ex.Message);
                 }
                 _port = _port + 1;
             }
-            while (true)
-            {
-                try
-                {
-                    // Wait for client
-                    clientSocket = serverSocket.Accept();
-                    // Get one, show some info
-                    _parent.Log("Client accepted:" + clientSocket.RemoteEndPoint.ToString());
-                    HTTPProcessor hp = new HTTPProcessor(clientSocket, _parent);
-                    // Single thread
-                    // hp.Process();
-                    // End single thread
+            try {
+                switch (mode) {
+                    case "Thread":
+                        _parent.Log("Thread Mode");
+                        startThreadHandler();
+                        break;
+                    case "ThreadPool":
+                        _parent.Log("ThreadPool Mode");
 
-                    // Thread
-                    // Thread t = new Thread(new ThreadStart(hp.Process));
-                    // t.Start();
-                    // End Thread
+                        setMaximumThreads();
 
-                    // Thread Pool
-                    ThreadPool.QueueUserWorkItem(CallbackHTTPProcess, hp);
-                    // End Thread Pool
-                }
-                catch (Exception ex)
-                {
-                    _parent.Log("Server starting error: " + ex.Message + "\n" + ex.StackTrace);
-
+                        startThreadPoolHandler();
+                        break;
+                    default:
+                        _parent.Log("Single Process Mode");
+                        startSingleProcessorHandler();
+                        break;
                 }
             }
+            catch (Exception ex)
+            {
+                 _parent.Log("Server starting error: " + ex.Message + "\n" + ex.StackTrace);
+            }
+        }
 
+        private void setMaximumThreads() {
+            int workerThreads;
+            int portThreads;
+
+            ThreadPool.GetAvailableThreads(out workerThreads, out portThreads);
+
+            bool isSuccess = ThreadPool.SetMaxThreads(maxThreads, portThreads);
+            if (!isSuccess) {
+                maxThreads = workerThreads;
+                _parent.Log("MaxThreads in config is too low. Using system default");
+            }
+            
+            _parent.Log("Max Threads = " + maxThreads);
+        }
+
+        private void startSingleProcessorHandler() {
+            while (true) {
+                HTTPProcessor hp = acceptConnection();
+                hp.Process();
+            }
+        }
+
+        private void startThreadHandler() {
+            while (true) {
+                HTTPProcessor hp = acceptConnection();
+                Thread t = new Thread(new ThreadStart(hp.Process));
+                t.Start();
+            }
+        }
+
+        private void startThreadPoolHandler() {
+            while (true) {
+                HTTPProcessor hp = acceptConnection();
+                ThreadPool.QueueUserWorkItem(CallbackHTTPProcess, hp);
+            }
+        }
+
+        private HTTPProcessor acceptConnection() {
+            clientSocket = serverSocket.Accept();
+
+            _parent.Log("Client accepted:" + clientSocket.RemoteEndPoint.ToString());
+
+            return new HTTPProcessor(clientSocket, _parent);
         }
 
         static void CallbackHTTPProcess(Object stateInfo) 
