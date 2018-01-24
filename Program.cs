@@ -4,6 +4,7 @@ using System.Text;
 using System.Net.Sockets;
 using System.Net;
 using System.IO;
+using System.Threading;
 using Microsoft.Extensions.Configuration;
 
 namespace DNWS
@@ -288,8 +289,13 @@ namespace DNWS
                     _parent.Log("Client accepted:" + clientSocket.RemoteEndPoint.ToString());
                     HTTPProcessor hp = new HTTPProcessor(clientSocket, _parent);
                     // Single thread
-                    hp.Process();
-                    // End single therad
+                    // hp.Process();
+                    // End single thread
+
+                    // Thread
+                    Thread t = new Thread(new ThreadStart(hp.Process));
+                    t.Start();
+                    // End Thread
 
                 }
                 catch (Exception ex)
