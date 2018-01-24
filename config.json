@@ -2,7 +2,7 @@
     "DocumentRoot": ".",
     "Port": "8080",
     "Mode": "ThreadPool",
-    "MaxThreads": 10,
+    "MaxThreads": 50,
     "Plugins" : [
         {
             "Path" : "stat",
