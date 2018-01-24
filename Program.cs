@@ -378,8 +378,15 @@ namespace DNWS
 
         static void CallbackHTTPProcess(Object stateInfo)
         {
-            HTTPProcessor hp = (HTTPProcessor)stateInfo;
-            hp.Process();
+            try
+            {
+                HTTPProcessor hp = (HTTPProcessor)stateInfo;
+                hp.Process();
+            }
+            catch (IOException ex)
+            {
+                _instance._parent.Log("Socket Closed by Host before respond: " + ex.Message);
+            }
         }
     }
 }
