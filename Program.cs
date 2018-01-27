@@ -230,6 +230,18 @@ namespace DNWS
             //_client.Close();
 
         }
+
+        /// <summary>
+        /// Send 429 Too many request and close connection
+        /// </summary>
+        public void CloseBeforeProcess() {
+            NetworkStream ns = new NetworkStream(_client);
+            HTTPResponse response = new HTTPResponse(429);
+
+            ns.Write(Encoding.UTF8.GetBytes(response.header), 0, response.header.Length);
+
+            _client.Shutdown(SocketShutdown.Both);
+        }
     }
 
     /// <summary>
@@ -331,7 +343,7 @@ namespace DNWS
             }
         }
 
-        static void callbackHTTPProcess(Object stateInfo)
+        private void callbackHTTPProcess(Object stateInfo)
         {
             try
             {
@@ -344,11 +356,24 @@ namespace DNWS
             }
         }
 
+        private bool isWorkerAvailable() {
+            int availableThreads, completionPortThreads;
+            ThreadPool.GetAvailableThreads(out availableThreads, out completionPortThreads);
+
+            return availableThreads > 0;
+        }
+
         private void startThreadPoolHandler()
         {
             while (true)
             {
                 HTTPProcessor hp = acceptConnection();
+
+                if (!isWorkerAvailable()) {
+                    hp.CloseBeforeProcess();
+                    continue;
+                }
+                
                 ThreadPool.QueueUserWorkItem(callbackHTTPProcess, hp);
             }
         }
