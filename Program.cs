@@ -299,8 +299,15 @@ namespace DNWS
         {
             while (true)
             {
-                HTTPProcessor hp = acceptConnection();
-                hp.Process();
+                try
+                {
+                    HTTPProcessor hp = acceptConnection();
+                    hp.Process();
+                }
+                catch (IOException ex)
+                {
+                    _instance._parent.Log("Socket Closed by Host before response \n" + ex.Message);
+                }
             }
         }
 
