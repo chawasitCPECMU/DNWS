@@ -309,7 +309,17 @@ namespace DNWS
             while (true)
             {
                 HTTPProcessor hp = acceptConnection();
-                Thread t = new Thread(new ThreadStart(hp.Process));
+                Thread t = new Thread(new ThreadStart(() =>
+                {
+                    try
+                    {
+                        hp.Process();
+                    }
+                    catch (IOException ex)
+                    {
+                        _instance._parent.Log("Socket Closed by Host before response \n" + ex.Message);
+                    }
+                }));
                 t.Start();
             }
         }
