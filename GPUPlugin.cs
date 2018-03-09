@@ -190,7 +190,7 @@ namespace DNWS
             LogError(error, "Cl.GetProgramBuildInfo");
             return new HTTPResponse(404);
           }
-          Kernel kernel = Cl.CreateKernel(program, "imagingTest", out error);
+          Kernel kernel = Cl.CreateKernel(program, "sobelFilter", out error);
           LogError(error, "Cl.CreateKernel");
 
           // Create image memory objects
