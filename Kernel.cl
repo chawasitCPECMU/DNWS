@@ -23,9 +23,9 @@ __kernel void sobelFilter(__read_only  image2d_t srcImg,
     CLK_FILTER_LINEAR;
   
   int2 relative_coords[9] = {
-    (-1, -1), (-1, 0), (-1, 1),
-    (0, -1), (0, 0), (0, 1),
-    (1, -1), (1, 0), (1, 1)
+    (int2)(-1, -1), (int2)(0, -1), (int2)(1, -1),
+    (int2)(-1, 0), (int2)(0, 0), (int2)(1, 0),
+    (int2)(-1, 1), (int2)(0, 1),(int2) (1, 1)
   };
 
   // right direction convolution kernel
@@ -47,9 +47,8 @@ __kernel void sobelFilter(__read_only  image2d_t srcImg,
   float right_direction = 0.0f;
   float down_direction = 0.0f;
   for(int i = 0; i < 9; i++) {
-    int i_inverse = 9 - 1 - i;
-    float right_element = right_kernel[i_inverse];
-    float down_element = down_kernel[i_inverse];
+    float right_element = right_kernel[i];
+    float down_element = down_kernel[i];
 
     // get target pixel's bgra value, then convert it to grayscale
     int2 coord = base_coord + relative_coords[i];
