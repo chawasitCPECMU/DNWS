@@ -25,7 +25,7 @@ __kernel void sobelFilter(__read_only  image2d_t srcImg,
   int2 relative_coords[9] = {
     (int2)(-1, -1), (int2)(0, -1), (int2)(1, -1),
     (int2)(-1, 0), (int2)(0, 0), (int2)(1, 0),
-    (int2)(-1, 1), (int2)(0, 1),(int2) (1, 1)
+    (int2)(-1, 1), (int2)(0, 1), (int2) (1, 1)
   };
 
   // right direction convolution kernel
