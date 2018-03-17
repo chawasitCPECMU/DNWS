@@ -54,9 +54,10 @@ __kernel void sobelFilter(__read_only  image2d_t srcImg,
     int2 coord = base_coord + relative_coords[i];
     uint4 bgra = read_imageui(srcImg, smp, coord);
     float4 bgrafloat = convert_float4(bgra) / 255.0f;
-    float luminance = sqrt(0.241f * bgrafloat.z * bgrafloat.z + 0.691f * 
-      bgrafloat.y * bgrafloat.y + 0.068f * bgrafloat.x * bgrafloat.x);
-
+    float luminance = sqrt(0.114f * bgrafloat.z * bgrafloat.z + 0.587f * 
+      bgrafloat.y * bgrafloat.y + 0.299 * bgrafloat.x * bgrafloat.x);
+    // x y z
+    // b g r
     right_direction += right_element * luminance;
     down_direction += down_element * luminance;
   }
