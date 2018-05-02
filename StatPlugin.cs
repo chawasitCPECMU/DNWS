@@ -27,7 +27,7 @@ namespace DNWS
         statDictionary[request.Url] = 1;
       }
     }
-    public HTTPResponse GetResponse(HTTPRequest request)
+    public virtual HTTPResponse GetResponse(HTTPRequest request)
     {
       HTTPResponse response = null;
       StringBuilder sb = new StringBuilder();
@@ -38,7 +38,7 @@ namespace DNWS
       }
       sb.Append("</body></html>");
       response = new HTTPResponse(200);
-      response.body = Encoding.UTF8.GetBytes(sb.ToString());
+      response.Body = Encoding.UTF8.GetBytes(sb.ToString());
       return response;
     }
 

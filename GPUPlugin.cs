@@ -147,7 +147,7 @@ namespace DNWS
         sb.Append("<html><body>");
         sb.Append(GenUploadForm());
         sb.Append("</body></html>");
-        response.body = Encoding.UTF8.GetBytes(sb.ToString());
+        response.Body = Encoding.UTF8.GetBytes(sb.ToString());
         return response;
       } else if (request.Method == HTTPRequest.METHOD_POST) {
         // Get remote image from URL
@@ -251,8 +251,8 @@ namespace DNWS
           Bitmap outputBitmap = new Bitmap(imagewidth, imageHeight, bitmapData.Stride, PixelFormat.Format32bppArgb, outputBmpPointer);
           MemoryStream msOutput = new MemoryStream();
           outputBitmap.Save(msOutput, System.Drawing.Imaging.ImageFormat.Jpeg);
-          response.body = msOutput.ToArray();
-          response.type = "image/jpeg";
+          response.Body = msOutput.ToArray();
+          response.Type = "image/jpeg";
           return response;
         }  
       }

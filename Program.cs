@@ -188,31 +188,39 @@ namespace DNWS
 
             // Guess the content type from file extension
             string fileType = "text/html";
-            if (path.ToLower().EndsWith("jpg") || path.ToLower().EndsWith("jpeg"))
+            if (path.ToLower().EndsWith(".jpg") || path.ToLower().EndsWith(".jpeg"))
             {
                 fileType = "image/jpeg";
             }
-            if (path.ToLower().EndsWith("png"))
+            else if (path.ToLower().EndsWith(".png"))
             {
                 fileType = "image/png";
+            }
+            else if (path.ToLower().EndsWith(".js"))
+            {
+                fileType = "application/javascript";
+            }
+            else if (path.ToLower().EndsWith(".css"))
+            {
+                fileType = "text/css";
             }
 
             // Try to read the file, if not found then 404, otherwise, 500.
             try
             {
                 response = new HTTPResponse(200);
-                response.type = fileType;
-                response.body = System.IO.File.ReadAllBytes(path);
+                response.Type = fileType;
+                response.Body = System.IO.File.ReadAllBytes(path);
             }
             catch (FileNotFoundException ex)
             {
                 response = new HTTPResponse(404);
-                response.body = Encoding.UTF8.GetBytes("<h1>404 Not found</h1>" + ex.Message);
+                response.Body = Encoding.UTF8.GetBytes("<h1>404 Not found</h1>" + ex.Message);
             }
             catch (Exception ex)
             {
                 response = new HTTPResponse(500);
-                response.body = Encoding.UTF8.GetBytes("<h1>500 Internal Server Error</h1>" + ex.Message);
+                response.Body = Encoding.UTF8.GetBytes("<h1>500 Internal Server Error</h1>" + ex.Message);
             }
             return response;
 
@@ -224,20 +232,21 @@ namespace DNWS
         public void Process()
         {
             NetworkStream ns = new NetworkStream(_client);
-            string requestStr = "";
+            StringBuilder requestStr = new StringBuilder();
             HTTPRequest request = null;
             HTTPResponse response = null;
             byte[] bytes = new byte[1024];
             int bytesRead;
+            
 
             // Read all request
             do
             {
                 bytesRead = ns.Read(bytes, 0, bytes.Length);
-                requestStr += Encoding.UTF8.GetString(bytes, 0, bytesRead);
+                requestStr.Append(Encoding.UTF8.GetString(bytes, 0, bytesRead));
             } while (ns.DataAvailable);
 
-            request = new HTTPRequest(requestStr);
+            request = new HTTPRequest(requestStr.ToString());
             request.AddProperty("RemoteEndPoint", _client.RemoteEndPoint.ToString());
 
             // We can handle only GET now
@@ -247,6 +256,9 @@ namespace DNWS
             else
             {
                 bool processed = false;
+                //FIXME, this seem duplicate with HTTPRequest
+                string[] requestUrls = request.Url.Split("/");
+                string[] paths = requestUrls[1].Split("?");
                 // pre processing
                 foreach(KeyValuePair<string, PluginInfo> plugininfo in PM.Plugins) {
                     if(plugininfo.Value.preprocessing) {
@@ -255,7 +267,8 @@ namespace DNWS
                 }
                 // plugins
                 foreach(KeyValuePair<string, PluginInfo> plugininfo in PM.Plugins) {
-                    if(request.Filename.StartsWith(plugininfo.Key)) {
+                    if(paths[0].Equals(plugininfo.Key, StringComparison.InvariantCultureIgnoreCase)) {
+                    //if(request.Url.StartsWith("/" + plugininfo.Key)) {
                         response = plugininfo.Value.reference.GetResponse(request);
                         processed = true;
                     }
@@ -264,11 +277,11 @@ namespace DNWS
                 if(!processed) {
                     if (request.Filename.Equals(""))
                     {
-                        response = getFile(ROOT + "/index.html");
+                        response = getFile(ROOT + "/" + request.Url + "/index.html");
                     }
                     else
                     {
-                        response = getFile(ROOT + "/" + request.Filename);
+                        response = getFile(ROOT + "/" + request.Url);
                     }
                 }
                 // post processing pipe
@@ -279,9 +292,9 @@ namespace DNWS
                 }
             }
             // Generate response
-            ns.Write(Encoding.UTF8.GetBytes(response.header), 0, response.header.Length);
-            if(response.body != null) {
-              ns.Write(response.body, 0, response.body.Length);
+            ns.Write(Encoding.UTF8.GetBytes(response.Header), 0, response.Header.Length);
+            if(response.Body != null) {
+              ns.Write(response.Body, 0, response.Body.Length);
             }
 
             // Shuting down

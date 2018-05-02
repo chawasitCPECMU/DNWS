@@ -1,4 +1,4 @@
-﻿{
+{
     "DocumentRoot": ".",
     "Port": "8080",
     "ThreadPoolSize" : "10",
@@ -8,6 +8,13 @@
         {
             "Path" : "stat",
             "Class" : "DNWS.StatPlugin",
+            "Preprocessing" : "true",
+            "Postprocessing" : "false" ,
+            "Singleton" : "false"
+        },
+        {
+            "Path" : "statapi",
+            "Class" : "DNWS.StatAPIPlugin",
             "Preprocessing" : "true",
             "Postprocessing" : "false" ,
             "Singleton" : "false"
@@ -31,6 +38,18 @@
         {
             "Path" : "delay",
             "Class" : "DNWS.DelayPlugin",
+            "Preprocessing" : "false",
+            "Postprocessing" :"false" 
+        },
+        {
+            "Path" : "twitter",
+            "Class" : "DNWS.TwitterPlugin",
+            "Preprocessing" : "false",
+            "Postprocessing" :"false" 
+        },
+        {
+            "Path" : "twitterapi",
+            "Class" : "DNWS.TwitterAPIPlugin",
             "Preprocessing" : "false",
             "Postprocessing" :"false" 
         }

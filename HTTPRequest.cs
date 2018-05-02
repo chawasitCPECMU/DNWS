@@ -9,10 +9,12 @@ namespace DNWS
   {
     public const string METHOD_POST = "POST";
     public const string METHOD_GET = "GET";
+    public const string METHOD_DELETE = "DELETE";
+    public const string METHOD_OPTIONS = "OPTIONS";
     protected String _url;
     protected String _filename;
-    protected static Dictionary<String, String> _propertyListDictionary = null;
-    protected static Dictionary<String, String> _requestListDictionary = null;
+    protected Dictionary<String, String> _propertyListDictionary = null;
+    protected Dictionary<String, String> _requestListDictionary = null;
 
     protected String _body;
 
@@ -64,6 +66,10 @@ namespace DNWS
         _method = METHOD_GET;
       } else if(statusLine[0].ToLower().Equals("post")) {
         _method = METHOD_POST;
+      } else if(statusLine[0].ToLower().Equals("delete")) {
+        _method = METHOD_DELETE;
+      } else if(statusLine[0].ToLower().Equals("options")) {
+        _method = METHOD_OPTIONS;
       } else {
         _status = 501;
         return;
@@ -80,6 +86,12 @@ namespace DNWS
         _requestListDictionary = parts[1].Split('&').Select(x => x.Split('=')).ToDictionary(x => x[0].ToLower(), x => x[1]);
       } else{
         _requestListDictionary = new Dictionary<String, String>();
+        if (parts.Length > 1) {
+          String[] requestParts = Regex.Split(parts[1], "[=]");
+          if(requestParts.Length > 1) {
+            AddRequest(requestParts[0], requestParts[1]);
+          }
+        }
       }
 
       if(lines.Length == 1) return;
@@ -90,7 +102,11 @@ namespace DNWS
         if(pair.Length == 1) { // handle post body
           if(pair[0].Length > 1) { //FIXME, this is a quick hack
             Dictionary<String, String> _bodys = pair[0].Split('&').Select(x => x.Split('=')).ToDictionary(x => x[0].ToLower(), x => x[1]);
-            _requestListDictionary = _requestListDictionary.Concat(_bodys).ToDictionary(x=>x.Key, x=>x.Value);
+            foreach(KeyValuePair<string, string> entry in _bodys) {
+              if(!_requestListDictionary.ContainsKey(entry.Key)) {
+                AddRequest(entry.Key, entry.Value);
+              }
+            }
           }
         } else { // Length == 2, GET url request
           AddProperty(pair[0], pair[1]);
@@ -116,11 +132,11 @@ namespace DNWS
 
     public void AddProperty(String key, String value)
     {
-      _propertyListDictionary[key.ToLower()] = value;
+      _propertyListDictionary.Add(key.ToLower(), value.TrimEnd('\r', '\n'));
     }
     public void AddRequest(String key, String value)
     {
-      _requestListDictionary[key.ToLower()] = value;
+      _requestListDictionary.Add(key.ToLower(), value.TrimEnd('\r', '\n'));
     }
   }
 }

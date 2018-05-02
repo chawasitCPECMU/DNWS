@@ -26,7 +26,7 @@ namespace DNWS
           delay = Convert.ToInt32(parts[1]);
         } catch (Exception ex) {
           response = new HTTPResponse(400);
-          response.body = Encoding.UTF8.GetBytes(ex.ToString());
+          response.Body = Encoding.UTF8.GetBytes(ex.ToString());
           return response;
         }
 
@@ -38,7 +38,7 @@ namespace DNWS
       sb.Append("<html><body>");
       sb.Append("<h1>Sleep for " + delay + " millisecond. </h1>");
       sb.Append("</body></html>");
-      response.body = Encoding.UTF8.GetBytes(sb.ToString());
+      response.Body = Encoding.UTF8.GetBytes(sb.ToString());
       return response;
     }
 
