@@ -11,6 +11,6 @@ FROM microsoft/dotnet:2.0-runtime-deps
 WORKDIR /app
 COPY --from=build-env /app/out ./
 #COPY /app/out ./
-COPY ./config.json /app/out
-COPY ./index.html /app/out
+COPY ./config.json ./
+COPY ./index.html ./
 ENTRYPOINT [ "/app/DNWS" ]
