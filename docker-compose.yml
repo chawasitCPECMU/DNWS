@@ -1,7 +1,7 @@
 version: "3"
 
 services:
-  dwwns:
+  dnws:
     image: dnws:hw3
     deploy:
       replicas: 3
@@ -10,12 +10,24 @@ services:
     networks:
       - dnwsnet
     environment:
-      - redis=true
+      - redisHost=redis:6379
 
   redis:
     image: redis
     networks:
       - dnwsnet
+
+  visualizer:
+    image: dockersamples/visualizer:stable
+    ports:
+      - "8888:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    networks:
+      dnwsnet:
 
 networks:
   dnwsnet:

@@ -11,13 +11,13 @@ namespace DNWS
         protected static RedisManagerPool redisManager = null;
         public StatPlugin()
         {
-            string useRedis = Environment.GetEnvironmentVariable("redis");
+            string redisHost = Environment.GetEnvironmentVariable("redisHost");
 
-            if (useRedis != null)
+            if (redisHost != null)
             {
                 if (redisManager == null) {
                   Console.WriteLine("Using Redis");
-                  redisManager = new RedisManagerPool("redis:6379");
+                  redisManager = new RedisManagerPool(redisHost);
                 }
             }
             else if (statDictionary == null)
