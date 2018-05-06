@@ -15,7 +15,7 @@
         {
             "Path" : "statapi",
             "Class" : "DNWS.StatAPIPlugin",
-            "Preprocessing" : "true",
+            "Preprocessing" : "false",
             "Postprocessing" : "false" ,
             "Singleton" : "false"
         },
