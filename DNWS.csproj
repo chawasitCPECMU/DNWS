@@ -14,6 +14,7 @@
       <PackageReference Include="OpenCL.NET" Version="2.2.9.0" />
       <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.0" />
       <PackageReference Include="System.Drawing.Common" Version="4.5.0-preview1-*" />
+      <PackageReference Include="ServiceStack.Redis.Core" Version="1.0.3" />
     </ItemGroup>
     <ItemGroup>
       <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="2.0.0" />
