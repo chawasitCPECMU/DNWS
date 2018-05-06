@@ -1,0 +1,21 @@
+version: "3"
+
+services:
+  dwwns:
+    image: dnws:hw3
+    deploy:
+      replicas: 3
+    ports:
+      - "8080:8080"
+    networks:
+      - dnwsnet
+    environment:
+      - redis=true
+
+  redis:
+    image: redis
+    networks:
+      - dnwsnet
+
+networks:
+  dnwsnet:
